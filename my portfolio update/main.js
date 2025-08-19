@@ -47,7 +47,24 @@ document.querySelector(".contact-form").addEventListener("submit", function(e) {
 
   // If valid, submit and clear fields
   if (valid) {
-    alert("Form submitted successfully!");
+    // Create or select success message element
+    let successMsg = document.getElementById("successMsg");
+    if (!successMsg) {
+      successMsg = document.createElement("p");
+      successMsg.id = "successMsg";
+      successMsg.style.color = "green";
+      successMsg.style.marginTop = "10px";
+      document.querySelector(".contact-form").appendChild(successMsg);
+    }
+
+    successMsg.innerText = "Form submitted successfully!";
+    successMsg.style.display = "block";
+
+    // Hide after 3 seconds
+    setTimeout(() => {
+      successMsg.style.display = "none";
+    }, 3000);
+
     console.log({ name, email, subject, message });
 
     // Clear fields after submission
