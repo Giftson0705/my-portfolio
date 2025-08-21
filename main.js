@@ -59,10 +59,10 @@ document.querySelector(".contact-form").addEventListener("submit", function(e) {
     }
 
     // Subject validation
-    if (subject === "") {
+    /*if (subject === "") {
         document.getElementById("subjectError").innerText = "Subject cannot be empty.";
         valid = false;
-    }
+    }*/
 
     // Message validation
     if (message === "") {
