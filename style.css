@@ -582,7 +582,7 @@ section {
 
 .form-group textarea {
     min-height: 120px; /* Standard height for textarea to match other inputs proportion */
-    resize: vertical;
+    resize: none;
 }
 
 .form-group input:focus,
