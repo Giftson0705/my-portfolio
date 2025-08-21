@@ -1,4 +1,4 @@
-  /* Reset and Base Styles */
+/* Reset and Base Styles */
 * {
     margin: 0;
     padding: 0;
@@ -100,6 +100,19 @@ body {
     transition: 0.3s;
 }
 
+/* Hamburger Animation */
+.hamburger.active .bar:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.active .bar:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+}
+
+.hamburger.active .bar:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+}
+
 /* Hero Section */
 .hero {
     min-height: 100vh;
@@ -162,6 +175,7 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    cursor: pointer;
 }
 
 .btn-primary {
@@ -185,6 +199,7 @@ body {
     color: white;
     transform: translateY(-2px);
 }
+
 /* Profile image */
 .hero-image {
     display: flex;
@@ -562,6 +577,12 @@ section {
     color: #f1f5f9;
     font-size: 1rem;
     transition: all 0.3s ease;
+    min-height: 48px; /* Standard height for all form inputs */
+}
+
+.form-group textarea {
+    min-height: 120px; /* Standard height for textarea to match other inputs proportion */
+    resize: vertical;
 }
 
 .form-group input:focus,
