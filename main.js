@@ -1,34 +1,5 @@
-// Mobile hamburger menu functionality
-const hamburger = document.querySelector('.hamburger');
-const navMenu = document.querySelector('.nav-menu');
-
-// Toggle mobile menu
-hamburger.addEventListener('click', function() {
-    hamburger.classList.toggle('active');
-    navMenu.classList.toggle('active');
-});
-
-// Close mobile menu when clicking on a nav link
-document.querySelectorAll('.nav-link').forEach(function(link) {
-    link.addEventListener('click', function() {
-        hamburger.classList.remove('active');
-        navMenu.classList.remove('active');
-    });
-});
-
-// Close mobile menu when clicking outside
-document.addEventListener('click', function(event) {
-    const isClickInsideNav = navMenu.contains(event.target);
-    const isClickOnHamburger = hamburger.contains(event.target);
-    
-    if (!isClickInsideNav && !isClickOnHamburger && navMenu.classList.contains('active')) {
-        hamburger.classList.remove('active');
-        navMenu.classList.remove('active');
-    }
-});
-
-// Contact form validation and submission
-document.querySelector(".contact-form").addEventListener("submit", function(e) {
+// Contact form validation and submission with API integration
+document.querySelector(".contact-form").addEventListener("submit", async function(e) {
     e.preventDefault();
 
     // Clear old errors
@@ -77,34 +48,74 @@ document.querySelector(".contact-form").addEventListener("submit", function(e) {
                 el.innerText = "";
             });
         }, 3000);
+        return;
     }
 
-    // If valid, submit and clear fields
-    if (valid) {
-        // Create or select success message element
-        let successMsg = document.getElementById("successMsg");
-        if (!successMsg) {
-            successMsg = document.createElement("p");
-            successMsg.id = "successMsg";
-            successMsg.style.color = "green";
-            successMsg.style.marginTop = "10px";
-            document.querySelector(".contact-form").appendChild(successMsg);
+    // If validation passes, submit to API
+    try {
+        const response = await fetch('http://localhost:8000/api/contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: name,
+                email: email,
+                subject: subject,
+                message: message
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Success - show success message
+            let successMsg = document.getElementById("successMsg");
+            if (!successMsg) {
+                successMsg = document.createElement("p");
+                successMsg.id = "successMsg";
+                successMsg.style.color = "green";
+                successMsg.style.marginTop = "10px";
+                document.querySelector(".contact-form").appendChild(successMsg);
+            }
+
+            successMsg.innerText = "Message sent successfully!";
+            successMsg.style.display = "block";
+
+            // Clear form fields
+            document.getElementById("name").value = "";
+            document.getElementById("email").value = "";
+            document.getElementById("subject").value = "";
+            document.getElementById("message").value = "";
+
+            // Hide success message after 3 seconds
+            setTimeout(function() {
+                successMsg.style.display = "none";
+            }, 3000);
+
+        } else {
+            throw new Error(data.detail || 'Failed to send message');
         }
 
-        successMsg.innerText = "Form submitted successfully!";
-        successMsg.style.display = "block";
+    } catch (error) {
+        console.error('Error:', error);
+        
+        // Show error message
+        let errorMsg = document.getElementById("errorMsg");
+        if (!errorMsg) {
+            errorMsg = document.createElement("p");
+            errorMsg.id = "errorMsg";
+            errorMsg.style.color = "red";
+            errorMsg.style.marginTop = "10px";
+            document.querySelector(".contact-form").appendChild(errorMsg);
+        }
 
-        // Hide after 3 seconds
+        errorMsg.innerText = "Failed to send message. Please try again.";
+        errorMsg.style.display = "block";
+
+        // Hide error message after 3 seconds
         setTimeout(function() {
-            successMsg.style.display = "none";
+            errorMsg.style.display = "none";
         }, 3000);
-
-        console.log({ name, email, subject, message });
-
-        // Clear fields after submission
-        document.getElementById("name").value = "";
-        document.getElementById("email").value = "";
-        document.getElementById("subject").value = "";
-        document.getElementById("message").value = "";
     }
 });
