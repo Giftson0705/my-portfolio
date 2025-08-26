@@ -53,7 +53,7 @@ document.querySelector(".contact-form").addEventListener("submit", async functio
 
     // If validation passes, submit to API
     try {
-        const response = await fetch('http://localhost:8000/api/contact', {
+        const response = await fetch('http://localhost:60619/api/contact', {  // ✅ updated port
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -69,7 +69,6 @@ document.querySelector(".contact-form").addEventListener("submit", async functio
         const data = await response.json();
 
         if (response.ok) {
-            // Success - show success message
             let successMsg = document.getElementById("successMsg");
             if (!successMsg) {
                 successMsg = document.createElement("p");
@@ -78,17 +77,15 @@ document.querySelector(".contact-form").addEventListener("submit", async functio
                 successMsg.style.marginTop = "10px";
                 document.querySelector(".contact-form").appendChild(successMsg);
             }
-
             successMsg.innerText = "Message sent successfully!";
             successMsg.style.display = "block";
 
-            // Clear form fields
+            // Clear fields
             document.getElementById("name").value = "";
             document.getElementById("email").value = "";
             document.getElementById("subject").value = "";
             document.getElementById("message").value = "";
 
-            // Hide success message after 3 seconds
             setTimeout(function() {
                 successMsg.style.display = "none";
             }, 3000);
@@ -99,8 +96,6 @@ document.querySelector(".contact-form").addEventListener("submit", async functio
 
     } catch (error) {
         console.error('Error:', error);
-        
-        // Show error message
         let errorMsg = document.getElementById("errorMsg");
         if (!errorMsg) {
             errorMsg = document.createElement("p");
@@ -109,11 +104,9 @@ document.querySelector(".contact-form").addEventListener("submit", async functio
             errorMsg.style.marginTop = "10px";
             document.querySelector(".contact-form").appendChild(errorMsg);
         }
-
         errorMsg.innerText = "Failed to send message. Please try again.";
         errorMsg.style.display = "block";
 
-        // Hide error message after 3 seconds
         setTimeout(function() {
             errorMsg.style.display = "none";
         }, 3000);
