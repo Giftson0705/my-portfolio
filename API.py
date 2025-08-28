@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from dotenv import load_dotenv
+from pydantic import EmailStr, constr
 import os
 
 # Load environment variables
@@ -10,6 +11,12 @@ load_dotenv()
 API_KEY = os.getenv("API_KEY", "default123")
 
 app = FastAPI(title="Portfolio Backend")
+
+class ContactForm(BaseModel):
+    name: constr(min_length=1)     # must not be empty
+    email: EmailStr                # must be valid email
+    subject: constr(min_length=1)  # must not be empty
+    message: constr(min_length=1)  # must not be empty
 
 # CORS setup (allow frontend on port 3000)
 app.add_middleware(
@@ -86,8 +93,13 @@ def delete_item(item_id: int):
 # --- Contact Form Route ---
 from fastapi import Body
 
-@app.post("/api/contact")
-async def contact(data: dict = Body(...)):
-    print(" Contact form data:", data)
-    return {"message": "Message received successfully!", "data": data}
+# @app.post("/api/contact")
+# async def contact(data: dict = Body(...)):
+#     print(" Contact form data:", data)
+#     return {"message": "Message received successfully!", "data": data}
 
+
+@app.post("/api/contact")
+async def contact(data: ContactForm):
+    print(" Contact form data:", data.dict())
+    return {"message": "Message received successfully!", "data": data.dict()}
