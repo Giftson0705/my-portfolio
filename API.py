@@ -5,6 +5,16 @@ from typing import Optional
 from dotenv import load_dotenv
 from pydantic import EmailStr, constr
 import os
+from fastapi import Body
+from motor.motor_asyncio import AsyncIOMotorClient
+from bson import ObjectId
+
+# MongoDB connection (local)
+client = AsyncIOMotorClient("mongodb://localhost:27017")
+db = client["Portfolio_db"]  # database
+contacts_collection = db["contacts"]
+items_collection = db["items"]
+
 
 # Load environment variables
 load_dotenv()
@@ -34,8 +44,8 @@ async def log_requests(request: Request, call_next):
     response = await call_next(request)
     return response
 
-# In-memory database (demo only)
-items = {}
+# # In-memory database (demo only)
+# items = {}
 
 # Pydantic model
 class Item(BaseModel):
@@ -54,45 +64,86 @@ def verify_api_key(api_key: str):
 def read_root():
     return {"message": "Welcome to the FastAPI Portfolio Backend!"}
 
+# @app.post("/items", dependencies=[Depends(verify_api_key)])
+# def create_item(item: Item):
+#     item_id = len(items) + 1
+#     items[item_id] = item.dict()
+#     return {"id": item_id, "item": items[item_id]}
+
+# @app.get("/items/{item_id}")
+# def get_item(item_id: int, include_desc: bool = False):
+#     if item_id not in items:
+#         raise HTTPException(status_code=404, detail="Item not found")
+#     item = items[item_id]
+#     if not include_desc:
+#         item = {k: v for k, v in item.items() if k != "description"}
+#     return item
+
+# @app.put("/items/{item_id}", dependencies=[Depends(verify_api_key)])
+# def update_item(item_id: int, new_item: Item):
+#     if item_id not in items:
+#         raise HTTPException(status_code=404, detail="Item not found")
+#     items[item_id] = new_item.dict()
+#     return {"id": item_id, "item": items[item_id]}
+
+# @app.patch("/items/{item_id}", dependencies=[Depends(verify_api_key)])
+# def patch_item(item_id: int, updates: dict):
+#     if item_id not in items:
+#         raise HTTPException(status_code=404, detail="Item not found")
+#     items[item_id].update(updates)
+#     return {"id": item_id, "item": items[item_id]}
+
+# @app.delete("/items/{item_id}", dependencies=[Depends(verify_api_key)])
+# def delete_item(item_id: int):
+#     if item_id not in items:
+#         raise HTTPException(status_code=404, detail="Item not found")
+#     deleted = items.pop(item_id)
+#     return {"deleted": deleted}
+
+
 @app.post("/items", dependencies=[Depends(verify_api_key)])
-def create_item(item: Item):
-    item_id = len(items) + 1
-    items[item_id] = item.dict()
-    return {"id": item_id, "item": items[item_id]}
+async def create_item(item: Item):
+    result = await items_collection.insert_one(item.dict())
+    return {"id": str(result.inserted_id), "item": item.dict()}
 
 @app.get("/items/{item_id}")
-def get_item(item_id: int, include_desc: bool = False):
-    if item_id not in items:
+async def get_item(item_id: str, include_desc: bool = False):
+    item = await items_collection.find_one({"_id": ObjectId(item_id)})
+    if not item:
         raise HTTPException(status_code=404, detail="Item not found")
-    item = items[item_id]
     if not include_desc:
-        item = {k: v for k, v in item.items() if k != "description"}
+        item.pop("description", None)
+    item["_id"] = str(item["_id"])
     return item
 
 @app.put("/items/{item_id}", dependencies=[Depends(verify_api_key)])
-def update_item(item_id: int, new_item: Item):
-    if item_id not in items:
+async def update_item(item_id: str, new_item: Item):
+    result = await items_collection.replace_one({"_id": ObjectId(item_id)}, new_item.dict())
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Item not found")
-    items[item_id] = new_item.dict()
-    return {"id": item_id, "item": items[item_id]}
+    return {"id": item_id, "item": new_item.dict()}
 
 @app.patch("/items/{item_id}", dependencies=[Depends(verify_api_key)])
-def patch_item(item_id: int, updates: dict):
-    if item_id not in items:
+async def patch_item(item_id: str, updates: dict):
+    result = await items_collection.update_one({"_id": ObjectId(item_id)}, {"$set": updates})
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Item not found")
-    items[item_id].update(updates)
-    return {"id": item_id, "item": items[item_id]}
+    updated = await items_collection.find_one({"_id": ObjectId(item_id)})
+    updated["_id"] = str(updated["_id"])
+    return {"id": item_id, "item": updated}
 
 @app.delete("/items/{item_id}", dependencies=[Depends(verify_api_key)])
-def delete_item(item_id: int):
-    if item_id not in items:
+async def delete_item(item_id: str):
+    result = await items_collection.find_one_and_delete({"_id": ObjectId(item_id)})
+    if not result:
         raise HTTPException(status_code=404, detail="Item not found")
-    deleted = items.pop(item_id)
-    return {"deleted": deleted}
+    result["_id"] = str(result["_id"])
+    return {"deleted": result}
+
+
+
 
 # --- Contact Form Route ---
-from fastapi import Body
-
 # @app.post("/api/contact")
 # async def contact(data: dict = Body(...)):
 #     print(" Contact form data:", data)
@@ -101,5 +152,5 @@ from fastapi import Body
 
 @app.post("/api/contact")
 async def contact(data: ContactForm):
-    print(" Contact form data:", data.dict())
-    return {"message": "Message received successfully!", "data": data.dict()}
+    result = await contacts_collection.insert_one(data.dict())
+    return {"message": "Message saved!", "id": str(result.inserted_id), "data": data.dict()}
