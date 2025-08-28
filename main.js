@@ -29,11 +29,11 @@ document.querySelector(".contact-form").addEventListener("submit", async functio
         valid = false;
     }
 
-    // Subject validation
-    if (subject === "") {
-        document.getElementById("subjectError").innerText = "Subject cannot be empty.";
-        valid = false;
-    }
+    // // Subject validation
+    // if (subject === "") {
+    //     document.getElementById("subjectError").innerText = "Subject cannot be empty.";
+    //     valid = false;
+    // }
 
     // Message validation
     if (message === "") {
